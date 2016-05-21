@@ -1,0 +1,18 @@
+\BOOKMARK [1][-]{section.1}{References}{}
+\BOOKMARK [1][-]{section.2}{Basic equations \(dimensionAL form\)}{}
+\BOOKMARK [2][-]{subsection.2.1}{Reformulation of the free-boundary problem}{section.2}
+\BOOKMARK [1][-]{section.3}{Finite difference analogy}{}
+\BOOKMARK [2][-]{subsection.3.1}{Boundary conditions}{section.3}
+\BOOKMARK [2][-]{subsection.3.2}{Centered difference analogs for 2 j J-4}{section.3}
+\BOOKMARK [2][-]{subsection.3.3}{Difference equations near the boundaries}{section.3}
+\BOOKMARK [3][-]{subsubsection.3.3.1}{j=0}{subsection.3.3}
+\BOOKMARK [3][-]{subsubsection.3.3.2}{j=1}{subsection.3.3}
+\BOOKMARK [3][-]{subsubsection.3.3.3}{j=J-3}{subsection.3.3}
+\BOOKMARK [3][-]{subsubsection.3.3.4}{j=J-2}{subsection.3.3}
+\BOOKMARK [1][-]{section.4}{Algorithm}{}
+\BOOKMARK [2][-]{subsection.4.1}{Pentadiagonal coefficients}{section.4}
+\BOOKMARK [3][-]{subsubsection.4.1.1}{2 j J-4}{subsection.4.1}
+\BOOKMARK [3][-]{subsubsection.4.1.2}{j = 0}{subsection.4.1}
+\BOOKMARK [3][-]{subsubsection.4.1.3}{j = 1}{subsection.4.1}
+\BOOKMARK [3][-]{subsubsection.4.1.4}{j = J-3}{subsection.4.1}
+\BOOKMARK [3][-]{subsubsection.4.1.5}{j = J-2}{subsection.4.1}

@@ -1,0 +1,785 @@
+\title{Numerical solution of a nonlinear thin-film equation:
+\\
+gravity-driven spreading of a thin film with surface tension over a horizontal substrate
+}
+\author{
+        Joseph M. Barakat
+}
+\date{\today}
+%the percentage makes comments
+%this is the preamble where all the packages are loaded. I would always have these packages.
+\documentclass[12pt]{article}
+\usepackage[english]{babel}
+\usepackage{graphicx}%this allows you to add figures
+\usepackage{float}
+\usepackage{amsmath}%this lets you write math
+\usepackage{mathtools}
+\usepackage{amssymb}%this lets you write math symbols
+\usepackage{mathrsfs}
+\numberwithin{equation}{section}
+\usepackage{caption}%this lets you caption figure
+\usepackage{wrapfig}
+\usepackage{setspace}%this lets you control line spacing
+\usepackage{siunitx}%this lets you make SI units
+\usepackage[margin=1in]{geometry}
+\usepackage[version=3]{mhchem}
+\usepackage{csquotes}
+\usepackage{cancel}
+\usepackage{esint}
+\usepackage{courier}
+\usepackage{bm,upgreek}
+\usepackage{braket}
+%\usepackage{wasysym}
+%\usepackage{breqn}
+\usepackage{appendix}
+\usepackage{stmaryrd}
+\usepackage{hyperref}
+\usepackage[final]{pdfpages}
+\usepackage{bbm}
+%\usepackage{calligra}
+%\usepackage[T1]{fontenc}
+\usepackage{perpage}
+\usepackage{lscape}
+\MakePerPage{footnote}
+
+% Insert MATLAB and Mathematica  code into document
+\usepackage{listings}
+\lstloadlanguages{[5.2]Mathematica}
+\usepackage{color} %red, green, blue, yellow, cyan, magenta, black, white
+\definecolor{mygreen}{RGB}{28,172,0} % color values Red, Green, Blue
+\definecolor{mylilas}{RGB}{170,55,241}
+
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\sech}{sech}
+%
+%\DeclareMathAlphabet{\mathcalligra}{T1}{calligra}{m}{n}
+%\DeclareFontShape{T1}{calligra}{m}{n}{<->s*[1.7]callig15}{}
+
+\begin{document}
+\maketitle
+
+\allowdisplaybreaks[1]
+
+\renewcommand*{\thefootnote}{\fnsymbol{footnote}}
+
+% Insert MATLAB script into text
+\lstset{language=MATLAB,%
+    %basicstyle=\color{red},
+    breaklines=true,%
+    morekeywords={matlab2tikz},
+    keywordstyle=\color{blue},%
+    morekeywords=[2]{1}, keywordstyle=[2]{\color{black}},
+    identifierstyle=\color{black},%
+    stringstyle=\color{mylilas},
+    commentstyle=\color{mygreen},%
+    showstringspaces=false,%without this there will be a symbol in the places where there is a space
+    numbers=left,%
+    numberstyle={\tiny \color{black}},% size of the numbers
+    numbersep=9pt, % this defines how far the numbers are from the text
+    emph=[1]{for,end,break},emphstyle=[1]\color{red}, %some words to emphasise
+    %emph=[2]{word1,word2}, emphstyle=[2]{style},    
+}
+
+% To insert MATLAB script, type
+%	\texttt{\lstinputlisting{[...].m}}
+
+% To insert figure, type
+%	\begin{figure}[h]
+%	\begin{center}
+%		\includegraphics[width=.45\textwidth]{[...].jpg}
+%	\caption{...}
+%	\label{fig:?}
+%	\end{center}
+%	\end{figure}
+
+
+\section{References}
+
+J Lopez, {\it Dynamics of wetting processes}, { Ph.D. Thesis (Carnegie Mellon University),} (1975)
+
+\noindent
+D  U von Rosenberg, {\it Methods for the Numerical Solution of Partial Differential Equations} (1969)
+
+\section{Basic equations (dimensionAL form)}
+
+\begin{align}
+	\frac{\partial h}{\partial t} &=  \frac{1}{\sigma} \frac{\partial }{\partial \sigma}  \left( \sigma \frac{h^3}{3\mu} \frac{\partial P}{\partial \sigma} \right)
+	\\
+	P &
+	= \rho g h - \frac{\gamma}{\sigma}\frac{\partial }{\partial \sigma} \left( \sigma \frac{\partial h}{\partial \sigma} \right)  + \frac{A}{6 \pi h^3}
+	\\
+	h(\sigma,0) &= h(\sigma)
+	\\
+	\frac{\partial h}{\partial \sigma} (0,t) &= 0
+	\\
+	\frac{\partial P}{\partial \sigma}(0,t) &=0
+	\\
+	h[r(t),t] &= h^*
+	\\
+	\frac{\partial h}{\partial \sigma}[r(t),t] &= -\alpha
+	\\
+	2 \pi \int_0^{r(t)} h(\sigma,t) \, \sigma \, \mathrm{d}\sigma &= \mit{\Omega}
+\end{align}
+where $t$ is time, $\sigma$ is the radial position $h$ is the film thickness, $P$ is the pressure, $\gamma$ is the surface tension, $\rho$ the density, $g$ the acceleration due to gravity, $\mu$ the viscosity, $A$ the Hamaker constant, $\alpha$ the contact slope, $h^*$ the contact height, $\Omega$ the drop volume, and $r$ the drop radius.
+%  $k(h) = \rho g h^3/(3\mu)$ is the diffusivity, $\lambda = \sqrt{\gamma / (\rho g)}$ is the capillary length, and $\mit{\Omega}$ is the drop volume. 
+
+\subsection{Reformulation of the free-boundary problem}
+
+The boundary $\sigma = r(t)$ is free. Need to redefine the problem on a fixed domain.
+
+ Define the modified coordinates:
+ \[
+ 	\xi(\sigma, t) = \frac{\sigma}{r(t)}
+ 	,\qquad
+ 	\tau (t)
+ 	=
+ 	\frac{t}{[r(t)]^2}
+  \] 
+By the chain rule,
+\[
+	\frac{\partial}{\partial \sigma} = \frac{1}{r} \frac{\partial}{\partial \xi},
+	\qquad
+	\frac{\partial}{\partial t} 
+	= \frac{1}{r^2} \left( 1 - \frac{2t}{r} \frac{\mathrm{d}r}{\mathrm{d}t} \right) \frac{\partial}{\partial \tau}
+	= \frac{1}{r^2} \left( 1 - \frac{2\tau}{r} \frac{\partial r}{\partial \tau} + O[( {\partial r}/{\partial \tau})^2] \right) \frac{\partial}{\partial \tau},
+\]
+\[
+	\int_0^{r(t)} ( ~\cdot ~) \, \sigma \, \mathrm{d}\sigma = r^2 \int_0^1 ( ~ \cdot ~) \, \xi \, \mathrm{d}\xi
+\]
+%where $\dot{r} = \mathrm{d} r / \mathrm{d} t = \mathrm{d} r / \mathrm{d} \tau - (2 \tau / r)(\mathrm{d} r / \mathrm{d} \tau )^2 + \cdots $. \
+Thus, we obtain the modified problem:
+\begin{align}
+	d(\tau)\frac{\partial h}{\partial \tau} &= \frac{1}{\xi} \frac{\partial }{\partial \xi}  \left( \xi k(h) \frac{\partial p}{\partial \xi} \right)
+	\\
+	p &
+	= h - \frac{\lambda^2}{r^2} \frac{1}{\xi}\frac{\partial }{\partial \xi} \left( \xi \frac{\partial h}{\partial \xi} \right) 
+	+ \frac{\kappa}{h^3}
+	\\
+	h(\xi,0) &= h(\xi)
+	\\
+	\frac{\partial h}{\partial \xi} (0,\tau) &= 0
+	\\
+	\frac{\partial p}{\partial \xi}(0,\tau) &=0
+	\\
+	h(1,\tau) &= h^*
+	\\
+	\frac{\partial h}{\partial \xi}(1,\tau) &= - \alpha r
+	\\
+	2 \pi r^2 \int_0^{1} h(\xi,\tau) \, \xi \, \mathrm{d}\xi &= \mit{\Omega}
+\end{align}
+where
+\[
+	p = 
+	\frac{P}{\rho g}, \quad
+	\lambda^2 = \frac{\gamma}{\rho g},\quad
+	\kappa = \frac{A}{6 \pi \rho g},
+	\quad
+	d(\tau)  = 1 - \frac{\mathrm{d}r^2}{\mathrm{d}t}\tau, \quad
+	k(h) = \frac{\rho g h^3}{3\mu}
+\]
+We needed to transform the time derivative so that the spreading velocity appears explicitly in the equation. At each timestep, we update the spreading distance using the computed velocity.
+
+Note that the integral constraint is used to solve for the free boundary $r(\tau)$.
+
+\section{Finite difference analogy}
+
+Discretize $\{ \xi_j\}$, $\{ \tau_n\}$, $j = 0, 1, \dots, J$, $n = 0, 1, \dots, N$ on a uniform grid, where $\xi_j = j \Delta \xi$ and $\tau_n = n \Delta \tau$. Shift $h$ and $p$ by 1/2 step in space, so that $h_{j,n} = h(\xi_{j+\frac{1}{2}},t_n)$ and $p_{j,n} = p(\xi_{j+\frac{1}{2}},t_n)$. This is useful for two reasons. Firstly, the BCs can be easily applied. Second, we avoid the singularity at $\xi = 0$.
+
+
+For now, ignore the van der Waals term in the equation for the pressure (i.e. set $\kappa = 0$). Might find that we are unable to satisfy the right BC $h = 0$ at $\xi = 1$, but let's find out later...
+
+
+\subsection{Boundary conditions}
+
+\begin{align}
+	\frac{h_{0,n} - h_{-1,n}}{\Delta \xi} &= 0
+	\\
+	\frac{p_{0,n} - p_{-1,n}}{\Delta \xi} &= 0
+	\\
+	\frac{h_{J-1,n} + h_{J,n}}{2} &= h^*
+	\\
+	\frac{h_{J,n} - h_{J-1,n}}{\Delta \xi} &= - \alpha r_n
+	\\
+	\pi r_n^2 \Delta \xi^2 \left[ Jh^* +   \sum_{j=1}^{J-1} j (h_{j-1,n} + h_{j,n}) \right]& = \mit{\Omega}
+\end{align}
+from which we obtain
+\begin{align}
+	 h_{-1,n} &=  h_{0,n}
+	\\
+	 p_{-1,n}&=  p_{0,n}
+	\\
+	 h_{J-1,n}&= h^* + \frac{\alpha r_{n} \Delta \xi}{2}
+	\\
+	h_{J,n}&=  h^*- \frac{\alpha r_{n} \Delta \xi}{2}
+	\\
+	 r_n &= \left[
+	 	\frac{\mit{\Omega}}{\pi  \Delta \xi^2 \left[ Jh^* +   \sum_{j=1}^{J-1} j (h_{j-1,n} + h_{j,n}) \right]}
+	 \right]^{\frac{1}{2}}
+\end{align}
+Thus we eliminate $h_{-1,n}$, $h_{J-1,n}$, and $h_{J,n}$ as unknowns.  
+
+
+
+
+\subsection{Centered difference analogs for $2 \le j \le J-4$}
+
+Centered difference equations at $\xi_{j+\frac{1}{2}}$, $\tau_{n+\frac{1}{2}}$ (note that $h_{j,n+\frac{1}{2}}$, $p_{j,n+\frac{1}{2}}$ corresponds to the physical point $\xi_{j+\frac{1}{2}}, \tau_{n+\frac{1}{2}}$):
+\begin{align}
+	d_{n+\frac{1}{2}}
+	\frac{h_{j, n+1} - h_{j,n}}{\Delta \tau}
+	&
+	=
+	\frac{1}{(j +\frac{1}{2})\Delta \xi^2}
+	\left[
+		(j + 1) \Delta \xi k_{j+\frac{1}{2},n+\frac{1}{2}} \left( \frac{p_{j+1,n+\frac{1}{2}} - p_{j,n+\frac{1}{2}}}{\Delta \xi} \right)
+	\right.
+	\nonumber \\ &\qquad\qquad\qquad\qquad
+	\left.
+		-
+		j \Delta \xi k_{j-\frac{1}{2},n+\frac{1}{2}} \left( \frac{p_{j,n+\frac{1}{2}} - p_{j-1,n+\frac{1}{2}}}{\Delta \xi} \right)
+	\right]
+	\\
+	p_{j,n+\frac{1}{2}}
+	&=
+	h_{j,n+\frac{1}{2}}
+	-
+		\frac{\lambda^2}{(j + \tfrac{1}{2})r^2_{n+\frac{1}{2}} \Delta \xi^2}
+	\left[
+		(j+1)\Delta \xi \left( \frac{h_{j+1,n+\frac{1}{2}} - h_{j,n+\frac{1}{2}}}{\Delta \xi} \right)
+	\right.
+	\nonumber \\ &\qquad\qquad\qquad\qquad\qquad\qquad\qquad
+	\left.	
+		+
+		j \Delta \xi \left( \frac{h_{j,n+\frac{1}{2}} - h_{j-1,n+\frac{1}{2}}}{\Delta \xi} \right)
+	\right]
+	\\
+	d_{n+\frac{1}{2}}
+	&=
+	1 - 2 r_{n+\frac{1}{2}} \left( \frac{\mathrm{d}r}{\mathrm{d}t}\right)_{n+\frac{1}{2}} (n + \tfrac{1}{2}) \Delta \tau
+	\\
+	k_{j+\frac{1}{2},n+\frac{1}{2}}
+	&=
+	\frac{\rho g}{3 \mu} \left( \frac{h_{j,n+\frac{1}{2}}+h_{j+1,n+\frac{1}{2}}}{2} \right)^3
+	\\
+	k_{j-\frac{1}{2},n+\frac{1}{2}}
+	&=
+	\frac{\rho g}{3 \mu} \left( \frac{h_{j-1,n+\frac{1}{2}}+h_{j,n+\frac{1}{2}}}{2} \right)^3
+\end{align}
+Obviously, we can recombine some terms:
+\begin{align}
+	h_{j, n+1} - h_{j,n}
+	&
+	=
+	\frac{ \Delta \tau}{(j +\frac{1}{2})d_{n+\frac{1}{2}}\Delta \xi^2}
+	\left\{
+		jk_{j-\frac{1}{2}} p_{j-1}
+		-
+		[
+			jk_{j-\frac{1}{2}}
+			+
+			(j+1)k_{j+\frac{1}{2}}
+		]p_{j}
+		+
+		(j+1)k_{j+\frac{1}{2}} p_{j+1}
+	\right\}_{n+\frac{1}{2}}
+	\nonumber \\
+	p_{j}(\tau)
+	&=
+	h_{j}
+	-
+		\frac{\lambda^2}{(j + \tfrac{1}{2})r^2 \Delta \xi^2}
+	\left[
+		j h_{j-1} - (2j+1) h_j + (j+1) h_{j+1}
+	\right]
+\end{align}
+Now, we replace $\vec{p}_{n+\frac{1}{2}}$ with the average of the values of $t_n$ and $t_{n+1}$,
+\[
+	p_{j,n+\frac{1}{2}} = \frac{p_{j,n+1} + p_{j,n}}{2}
+\]
+so that we obtain a difference equation of Crank-Nicholson type:
+\begin{align}
+	&h_{j, n+1} 
+	-
+	\frac{\Delta \tau}{(j +\frac{1}{2})d_{n+\frac{1}{2}}\Delta \xi^2}
+	\left\{
+		jk_{j-\frac{1}{2},n+\frac{1}{2}} p_{j-1,n+1}
+		-
+		[
+			jk_{j-\frac{1}{2},n+\frac{1}{2}}
+			+
+			(j+1)k_{j+\frac{1}{2},n+\frac{1}{2}}
+		]p_{j,n+1}
+		+
+		(j+1)k_{j+\frac{1}{2}} p_{j+1,n+1}
+	\right\}
+	\nonumber \\
+	&=h_{j,n}
+	-
+	\frac{ \Delta \tau}{(j +\frac{1}{2})d_{n+\frac{1}{2}}\Delta \xi^2}
+	\left\{
+		jk_{j-\frac{1}{2},n+\frac{1}{2}} p_{j-1,n}
+		-
+		[
+			jk_{j-\frac{1}{2},n+\frac{1}{2}}
+			+
+			(j+1)k_{j+\frac{1}{2},n+\frac{1}{2}}
+		]p_{j,n}
+		+
+		(j+1)k_{j+\frac{1}{2},n+\frac{1}{2}} p_{j+1,n}
+	\right\}
+\end{align}
+We may re-express the Crank-Nicholson equation as a pentadiagonal system for $\vec{h}_{n+1}$:
+\begin{equation}
+	h_{j, n+1} 
+	-
+	\frac{2\Delta \tau}{(2j + 1)d_{n+\frac{1}{2}} \Delta \xi^2}
+	\sum_{k=-2}^2 a_{j+k,n+\frac{1}{2}} h_{j+k,n+1}
+	=
+	h_{j, n} 
+	+
+	\frac{2 \Delta \tau}{(2j +1)d_{n+\frac{1}{2}} \Delta \xi^2}
+	\sum_{k=-2}^2 a_{j+k,n+\frac{1}{2}} h_{j+k,n}
+\end{equation}
+where the coefficients are given by
+%\begin{align}
+%	a_{j-2,n+\frac{1}{2}}
+%	&=
+%	-\left[ \frac{j(j-1)}{j - \frac{1}{2}} \frac{\lambda^2}{r_{n+\frac{1}{2}}^2 \Delta \xi^2} \right] k_{j-\frac{1}{2},n+\frac{1}{2}}
+%	\\
+%	a_{j-1,n+\frac{1}{2}}
+%	&=
+%	j \left[
+%		1 + \left(
+%			\frac{j}{j + \frac{1}{2}} + \frac{2j - 1}{j - \frac{1}{2}}
+%		\right)
+%		\frac{\lambda^2}{r_{n+\frac{1}{2}}^2 \Delta \xi^2}
+%	\right] k_{j-\frac{1}{2},n+\frac{1}{2}}
+%	+
+%	\left[\frac{j(j+1)}{j + \frac{1}{2}}\frac{\lambda^2}{r_{n+\frac{1}{2}}^2 \Delta \xi^2} \right] k_{j+\frac{1}{2},n+\frac{1}{2}}
+%	\\
+%	a_{j,n+\frac{1}{2}}
+%	&=
+%	- j \left[
+%		1 + \left(
+%			\frac{j}{j - \frac{1}{2}} + \frac{2j +1}{j+\frac{1}{2}}
+%		\right) 
+%		\frac{\lambda^2}{r_{n+\frac{1}{2}}^2 \Delta \xi^2}
+%	\right]
+%	k_{j-\frac{1}{2},n+\frac{1}{2}}
+%	\nonumber \\ &\hphantom{=}\qquad
+%	-
+%	(j+1) \left[
+%		1 + \left(
+%			\frac{j + 1}{j + \frac{3}{2}}+ \frac{2j +1}{j+\frac{1}{2}}
+%		\right)\frac{\lambda^2}{r_{n+\frac{1}{2}}^2 \Delta \xi^2} 
+%	\right]k_{j+\frac{1}{2},n+\frac{1}{2}}
+%	\\
+%	a_{j+1,n+\frac{1}{2}}
+%	&=
+%	\left[
+%		\frac{j (j + 1)}{j + \frac{1}{2}} \frac{\lambda^2}{r_{n+\frac{1}{2}}^2 \Delta \xi^2}
+%	\right] k_{j-\frac{1}{2},n+\frac{1}{2}}
+%	+ (j+1)
+%	\left[
+%		1 + \left(
+%			\frac{j+1}{j + \frac{1}{2}} + \frac{2j + 3}{j + \frac{3}{2}}
+%		\right)\frac{\lambda^2}{r_{n+\frac{1}{2}}^2 \Delta \xi^2}
+%	\right]k_{j+\frac{1}{2},n+\frac{1}{2}}
+%	\\
+%	a_{j+2,n+\frac{1}{2}}
+%	&=
+%	-
+%	\left[
+%		\frac{(j+1)(j+2)}{j +\frac{3}{2}} \frac{\lambda^2}{r_{n+\frac{1}{2}}^2 \Delta \xi^2}
+%	\right]k_{j+\frac{1}{2},n+\frac{1}{2}}
+%\end{align}
+%Actually, these coefficients may be rewritten as
+\begin{align}
+	a_{j-2,n+\frac{1}{2}}
+	&=
+	-\left[ \frac{j-1}{2j - 1} \frac{2\lambda^2}{r_{n+\frac{1}{2}}^2 \Delta \xi^2} \right] j k_{j-\frac{1}{2},n+\frac{1}{2}}
+	\\
+	a_{j-1,n+\frac{1}{2}}
+	&=
+	\left[
+		1 + \frac{3j+1}{2j + 1}
+		\frac{2\lambda^2}{r_{n+\frac{1}{2}}^2 \Delta \xi^2}
+	\right] jk_{j-\frac{1}{2},n+\frac{1}{2}}
+	+
+	\left[
+		\frac{j}{2j + 1}\frac{2\lambda^2}{r_{n+\frac{1}{2}}^2 \Delta \xi^2}
+	\right] (j+1) k_{j+\frac{1}{2},n+\frac{1}{2}}
+	\\
+	a_{j,n+\frac{1}{2}}
+	&=
+	-  \left[
+		1 + \frac{3j - 1}{2j - 1}
+		\frac{2\lambda^2}{r_{n+\frac{1}{2}}^2 \Delta \xi^2}
+	\right]
+	j k_{j-\frac{1}{2},n+\frac{1}{2}}
+	-
+	\left[
+		1 + \frac{3j + 4}{2j + 3} \frac{2\lambda^2}{r_{n+\frac{1}{2}}^2 \Delta \xi^2} 
+	\right](j+1) k_{j+\frac{1}{2},n+\frac{1}{2}}
+	\\
+	a_{j+1,n+\frac{1}{2}}
+	&=
+	\left[
+		\frac{j + 1}{2j + 1} \frac{2 \lambda^2}{r_{n+\frac{1}{2}}^2 \Delta \xi^2}
+	\right] jk_{j-\frac{1}{2},n+\frac{1}{2}}
+	+
+	\left[
+		1 + \frac{3j+2}{2j + 1} \frac{2\lambda^2}{r_{n+\frac{1}{2}}^2 \Delta \xi^2}
+	\right] (j+1)k_{j+\frac{1}{2},n+\frac{1}{2}}
+	\\
+	a_{j+2,n+\frac{1}{2}}
+	&=
+	-
+	\left[
+		\frac{j+2}{2j +3} \frac{2\lambda^2}{r_{n+\frac{1}{2}}^2 \Delta \xi^2}
+	\right](j+1)k_{j+\frac{1}{2},n+\frac{1}{2}}
+\end{align}
+(derivation  commented out; doesn't hurt to double check these coefficients).
+
+Note that if $\lambda = 0$ (no surface tension), then the problem reduces to a tridiagonal system.
+
+
+\subsection{Difference equations near the boundaries}
+
+Special attention needs to be given to the equations near the center and rim of the drop.
+
+
+\subsubsection{$j=0$}
+
+We have $h_{-1}(\tau) = h_{0}(\tau)$ and $p_{-1}(\tau) = p_0(\tau)$. We can simply set $k_{j-\frac{1}{2},n+\frac{1}{2}} = 0$  in order to satisfy the second condition, then combine $a_{j-1}$ and $a_j$ to satisfy the second condition.
+
+
+\subsubsection{$j=1$}
+
+We have $h_{-1}(\tau) = h_{0}(\tau)$. Simply combine $a_{j-2}$ and $a_{j-1}$ to satisfy this condition.
+
+\subsubsection{$j=J-3$}
+
+We have $h_{J-1}(\tau) = h^* - \alpha r_n \Delta \xi / 2$. Simply move the term multiplying $a_{j+2}$ to the right-hand side of the equation.
+
+
+\subsubsection{$j=J-2$}
+
+
+We have $h_{J-1}(\tau) = h^* - \alpha r_n \Delta \xi / 2$ and $h_{J}(\tau) = h^* + \alpha r_n \Delta \xi / 2$. Simply move the terms multiplying $a_{j+1}$ and $a_{j+2}$ to the right-hand side of the equation.
+
+
+\pagebreak
+
+\section{Algorithm}
+
+Let's keep $t$ as is, only redefine $\sigma \rightarrow \xi$. Thus, replace $d_{n+\frac{1}{2}}$ with $r_{n+\frac{1}{2}}^2$ in the above equations.
+
+\begin{enumerate}
+	\item (Initialization) Set $n = 0$ and $\vec{h}_n = \vec{h}_0$ (initial condition).
+	\item (Prediction)
+		Given $\vec{h}_n$, $\vec{\nu} = [\mu / (\rho g), \lambda, h^*, \alpha, \mit{\Omega}]$, $\Delta t$, $\Delta \xi$. Set $\Delta t' = \Delta t/2$, $\vec{h}'= \vec{h}_n$. Compute the drop radius,
+		\[
+			r = 
+			\left[
+	 	\frac{\mit{\Omega}}{\pi  \Delta \xi^2 \left[ Jh^* +   \sum_{j=1}^{J-1} j (h'_{j-1} + h'_{j}) \right]}
+	 \right]^{\frac{1}{2}}
+		\]
+		the coefficients,
+		\[
+			T = 
+			\frac{2\Delta t'}{r^2\Delta \xi^2},
+			\qquad
+			S = 
+			\frac{2\lambda^2}{r^2\Delta \xi^2},
+			\qquad
+			R
+			=
+			\frac{\alpha r \Delta \xi}{2}
+		\]
+		and, finally, the diffusion coefficients,
+		\[
+			k_{j+\frac{1}{2}} = \frac{\rho g}{3 \mu} \left( 
+				\frac{h'_{j} + h'_{j+1}}{2}
+			\right)^3,
+			\qquad
+			k_{j-\frac{1}{2}} = \frac{\rho g}{3 \mu} \left( 
+				\frac{h'_{j-1} + h'_{j}}{2}
+			\right)^3,
+			\qquad
+			j = 0, 1, \dots, J-2
+		\]
+		Project $\vec{h}$ to $t_{n+\frac{1}{2}}$ using a centered Taylor series projection. That is, set $\vec{v} = \vec{h}_n$ and solve the pentadiagonal system,
+		\[
+			u_j
+			-
+			\frac{T}{2 j + 1}
+			\sum_{k=-2}^2 a_{j+k} u_{j+k}
+			=
+			v_{j} 
+			+
+			\frac{T}{2 j + 1}
+			\left(
+			f_j
+			+
+			\sum_{k=-2}^2 a_{j+k} v_{j+k}
+			\right)
+		\]
+		 where the coefficients $a_{j+k}$ and $f_j$ are given below. Then, set $\vec{h}_{n+\frac{1}{2}} = \vec{u}$.
+	\item (Correction) Now set $\Delta t' = \Delta t$ and $\vec{h}'= \vec{h}_{n+\frac{1}{2}}$. Recompute $r$, $T$, $S$, $R$, and $k$ as defined above using these new parameters. Then, solve the pentadiagonal system above with $\vec{v} = \vec{h}_n$. Set $\vec{h}_{n+1} = \vec{u}$. 
+	\item (Recursion) Advance $n$ by 1 and repeat steps 2 and 3.
+\end{enumerate}
+
+\subsection{Pentadiagonal coefficients}
+
+\subsubsection{$2 \le j \le J-4$}
+\begin{align}
+	a_{j-2}
+	&=
+	-S\left( \frac{j-1}{2j - 1} \right) j k_{j-\frac{1}{2}}
+	\\
+	a_{j-1}
+	&=
+	\left[
+		1 + S \left(\frac{3j+1}{2j + 1}\right)
+	\right] jk_{j-\frac{1}{2}}
+	+
+	S \left(
+		\frac{j}{2j + 1}
+	\right) (j+1) k_{j+\frac{1}{2}}
+	\\
+	a_{j}
+	&=
+	-  \left[
+		1 + S \left( \frac{3j - 1}{2j - 1} \right)
+	\right]
+	j k_{j-\frac{1}{2}}
+	-
+	\left[
+		1 + S\left( \frac{3j + 4}{2j + 3} \right)
+	\right](j+1) k_{j+\frac{1}{2}}
+	\\
+	a_{j+1}
+	&=
+	S\left(
+		\frac{j + 1}{2j + 1} 
+	\right) jk_{j-\frac{1}{2}}
+	+
+	\left[
+		1 + S \left( \frac{3j+2}{2j + 1} \right)
+	\right] (j+1)k_{j+\frac{1}{2}}
+	\\
+	a_{j+2}
+	&=
+	-S
+	\left(
+		\frac{j+2}{2j +3} 
+	\right)(j+1)k_{j+\frac{1}{2}}
+	\\
+	f_j 
+	&=
+	0
+\end{align}
+
+\subsubsection{$j = 0$}
+\begin{align}
+	a_{j-2}
+	&=
+	0
+	\\
+	a_{j-1}
+	&=
+	0
+	\\
+	a_{j}
+	&=
+	-
+	\left[
+		1 + S\left( \frac{3j + 4}{2j + 3} - \frac{j}{2j + 1} \right)
+	\right](j+1) k_{j+\frac{1}{2}}
+	\\
+	a_{j+1}
+	&=
+	\left[
+		1 + S \left( \frac{3j+2}{2j + 1} \right)
+	\right] (j+1)k_{j+\frac{1}{2}}
+	\\
+	a_{j+2}
+	&=
+	-S
+	\left(
+		\frac{j+2}{2j +3} 
+	\right)(j+1)k_{j+\frac{1}{2}}
+	\\
+	f_j 
+	&=
+	0
+\end{align}
+
+\subsubsection{$j = 1$}
+
+\begin{align}
+	a_{j-2}
+	&=
+	0
+	\\
+	a_{j-1}
+	&=
+	\left[
+		1 + S \left(\frac{3j+1}{2j + 1} -  \frac{j-1}{2j - 1}\right)
+	\right] jk_{j-\frac{1}{2}}
+	+
+	S \left(
+		\frac{j}{2j + 1}
+	\right) (j+1) k_{j+\frac{1}{2}}
+	\\
+	a_{j}
+	&=
+	-  \left[
+		1 + S \left( \frac{3j - 1}{2j - 1} \right)
+	\right]
+	j k_{j-\frac{1}{2}}
+	-
+	\left[
+		1 + S\left( \frac{3j + 4}{2j + 3} \right)
+	\right](j+1) k_{j+\frac{1}{2}}
+	\\
+	a_{j+1}
+	&=
+	S\left(
+		\frac{j + 1}{2j + 1} 
+	\right) jk_{j-\frac{1}{2}}
+	+
+	\left[
+		1 + S \left( \frac{3j+2}{2j + 1} \right)
+	\right] (j+1)k_{j+\frac{1}{2}}
+	\\
+	a_{j+2}
+	&=
+	-S
+	\left(
+		\frac{j+2}{2j +3} 
+	\right)(j+1)k_{j+\frac{1}{2}}
+	\\
+	f_j 
+	&=
+	0
+\end{align}
+
+
+
+\subsubsection{$j = J-3$}
+
+\begin{align}
+	a_{j-2}
+	&=
+	-S\left( \frac{j-1}{2j - 1} \right) j k_{j-\frac{1}{2}}
+	\\
+	a_{j-1}
+	&=
+	\left[
+		1 + S \left(\frac{3j+1}{2j + 1}\right)
+	\right] jk_{j-\frac{1}{2}}
+	+
+	S \left(
+		\frac{j}{2j + 1}
+	\right) (j+1) k_{j+\frac{1}{2}}
+	\\
+	a_{j}
+	&=
+	-  \left[
+		1 + S \left( \frac{3j - 1}{2j - 1} \right)
+	\right]
+	j k_{j-\frac{1}{2}}
+	-
+	\left[
+		1 + S\left( \frac{3j + 4}{2j + 3} \right)
+	\right](j+1) k_{j+\frac{1}{2}}
+	\\
+	a_{j+1}
+	&=
+	S\left(
+		\frac{j + 1}{2j + 1} 
+	\right) jk_{j-\frac{1}{2}}
+	+
+	\left[
+		1 + S \left( \frac{3j+2}{2j + 1} \right)
+	\right] (j+1)k_{j+\frac{1}{2}}
+	\\
+	a_{j+2}
+	&=
+	0
+	\\
+	f_j 
+	&=
+	-2\left(
+		h^* + R
+	\right)
+	S
+	\left(
+		\frac{j+2}{2j +3} 
+	\right)(j+1)k_{j+\frac{1}{2}}
+\end{align}
+
+
+\subsubsection{$j = J-2$}
+
+\begin{align}
+	a_{j-2}
+	&=
+	-S\left( \frac{j-1}{2j - 1} \right) j k_{j-\frac{1}{2}}
+	\\
+	a_{j-1}
+	&=
+	\left[
+		1 + S \left(\frac{3j+1}{2j + 1}\right)
+	\right] jk_{j-\frac{1}{2}}
+	+
+	S \left(
+		\frac{j}{2j + 1}
+	\right) (j+1) k_{j+\frac{1}{2}}
+	\\
+	a_{j}
+	&=
+	-  \left[
+		1 + S \left( \frac{3j - 1}{2j - 1} \right)
+	\right]
+	j k_{j-\frac{1}{2}}
+	-
+	\left[
+		1 + S\left( \frac{3j + 4}{2j + 3} \right)
+	\right](j+1) k_{j+\frac{1}{2}}
+	\\
+	a_{j+1}
+	&=
+	0
+	\\
+	a_{j+2}
+	&=
+	0
+	\\
+	f_j 
+	&=
+	-2\left(
+		h^* - R
+	\right)
+	S
+	\left(
+		\frac{j+2}{2j +3} 
+	\right)(j+1)k_{j+\frac{1}{2}}
+	\nonumber \\ & \hphantom{=}+
+	2 (h^* + R)
+	\left\{
+		S\left(
+		\frac{j + 1}{2j + 1} 
+	\right) jk_{j-\frac{1}{2}}
+	+
+	\left[
+		1 + S \left( \frac{3j+2}{2j + 1} \right)
+	\right] (j+1)k_{j+\frac{1}{2}}
+	\right\}
+\end{align}
+
+
+
+\end{document}

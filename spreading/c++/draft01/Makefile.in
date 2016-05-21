@@ -1,0 +1,56 @@
+#==============================================================================
+# MAKEFILE_IN
+
+#==============================================================================
+# directories
+WORK_DIR = $(HOME)/Documents/code/thin_films/spreading/c++/draft01
+INSTALL_DIR = $(HOME)/Documents/install
+LAPACK_DIR = $(INSTALL_DIR)/lapack-3.5.0
+ATLAS_DIR = $(INSTALL_DIR)/atlas-3.10.2/lib
+GSL_DIR = $(INSTALL_DIR)/gsl-1.16
+BESSEL_DIR = $(INSTALL_DIR)/amos
+#BOOST_DIR = $(INSTALL_DIR)/boost_1_58_0
+
+#==============================================================================
+# libraries
+LAPACK_LIB = $(LAPACK_DIR)/liblapack.a
+LAPACKE_LIB = $(LAPACK_DIR)/liblapacke.a
+BLAS_LIB = $(LAPACK_DIR)/librefblas.a
+CBLAS_LIB = $(ATLAS_DIR)/lib/libcblas.a
+ATLAS_LIB = $(ATLAS_DIR)/lib/libatlas.a
+GSL_LIB = $(GSL_DIR)/lib/lib/libgsl.a
+BESSEL_LIB = $(BESSEL_DIR)/libamos.a
+#BOOST_LIB = $(BOOST_DIR)/install/lib/libboost_*.a
+
+LIBRARIES = 
+LIBRARIES += $(LAPACKE_LIB) $(LAPACK_LIB) 
+LIBRARIES += $(BLAS_LIB) $(CBLAS_LIB) $(ATLAS_LIB)
+LIBRARIES += $(GSL_LIB)
+LIBRARIES += $(BESSEL_LIB)
+#LIBRARIES += $(BOOST_LIB)
+
+#==============================================================================
+# includes
+COMMON_INC = -I $(WORK_DIR)/include
+LAPACKE_INC = -I $(LAPACK_DIR)/lapacke/include
+GSL_INC = -I $(GSL_DIR)/ 
+#BOOST_INC = -I $(BOOST_DIR)/
+
+INCLUDES =
+INCLUDES += $(COMMON_INC) $(LAPACKE_INC)
+INCLUDES += $(GSL_INC)
+#INCLUDES += $(BOOST_INC)
+
+#==============================================================================
+# loader
+LOADER = gfortran
+LOADOPTS =
+
+#==============================================================================
+# compiler
+CC = g++
+CLFAGS = -O3
+#WARN = -Wall
+
+COMPILE = $(CC) -c $(CFLAGS) $(INCLUDES)
+
