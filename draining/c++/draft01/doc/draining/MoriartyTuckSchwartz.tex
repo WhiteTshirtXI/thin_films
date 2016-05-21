@@ -1,0 +1,614 @@
+\title{Numerical solution of a nonlinear thin-film equation:
+\\
+gravity-driven drainage of a thin film with surface tension down a vertical slab
+}
+\author{
+        Joseph M. Barakat
+}
+\date{\today}
+%the percentage makes comments
+%this is the preamble where all the packages are loaded. I would always have these packages.
+\documentclass[12pt]{article}
+\usepackage[english]{babel}
+\usepackage{graphicx}%this allows you to add figures
+\usepackage{float}
+\usepackage{amsmath}%this lets you write math
+\usepackage{mathtools}
+\usepackage{amssymb}%this lets you write math symbols
+\usepackage{mathrsfs}
+\numberwithin{equation}{section}
+\usepackage{caption}%this lets you caption figure
+\usepackage{wrapfig}
+\usepackage{setspace}%this lets you control line spacing
+\usepackage{siunitx}%this lets you make SI units
+\usepackage[margin=1in]{geometry}
+\usepackage[version=3]{mhchem}
+\usepackage{csquotes}
+\usepackage{cancel}
+\usepackage{esint}
+\usepackage{courier}
+\usepackage{bm,upgreek}
+\usepackage{braket}
+%\usepackage{wasysym}
+%\usepackage{breqn}
+\usepackage{appendix}
+\usepackage{stmaryrd}
+\usepackage{hyperref}
+\usepackage[final]{pdfpages}
+\usepackage{bbm}
+%\usepackage{calligra}
+%\usepackage[T1]{fontenc}
+\usepackage{perpage}
+\usepackage{lscape}
+\MakePerPage{footnote}
+
+% Insert MATLAB and Mathematica  code into document
+\usepackage{listings}
+\lstloadlanguages{[5.2]Mathematica}
+\usepackage{color} %red, green, blue, yellow, cyan, magenta, black, white
+\definecolor{mygreen}{RGB}{28,172,0} % color values Red, Green, Blue
+\definecolor{mylilas}{RGB}{170,55,241}
+
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\sech}{sech}
+%
+%\DeclareMathAlphabet{\mathcalligra}{T1}{calligra}{m}{n}
+%\DeclareFontShape{T1}{calligra}{m}{n}{<->s*[1.7]callig15}{}
+
+\begin{document}
+\maketitle
+
+\allowdisplaybreaks[1]
+
+\renewcommand*{\thefootnote}{\fnsymbol{footnote}}
+
+% Insert MATLAB script into text
+\lstset{language=MATLAB,%
+    %basicstyle=\color{red},
+    breaklines=true,%
+    morekeywords={matlab2tikz},
+    keywordstyle=\color{blue},%
+    morekeywords=[2]{1}, keywordstyle=[2]{\color{black}},
+    identifierstyle=\color{black},%
+    stringstyle=\color{mylilas},
+    commentstyle=\color{mygreen},%
+    showstringspaces=false,%without this there will be a symbol in the places where there is a space
+    numbers=left,%
+    numberstyle={\tiny \color{black}},% size of the numbers
+    numbersep=9pt, % this defines how far the numbers are from the text
+    emph=[1]{for,end,break},emphstyle=[1]\color{red}, %some words to emphasise
+    %emph=[2]{word1,word2}, emphstyle=[2]{style},    
+}
+
+% To insert MATLAB script, type
+%	\texttt{\lstinputlisting{[...].m}}
+
+% To insert figure, type
+%	\begin{figure}[h]
+%	\begin{center}
+%		\includegraphics[width=.45\textwidth]{[...].jpg}
+%	\caption{...}
+%	\label{fig:?}
+%	\end{center}
+%	\end{figure}
+
+
+\section{References}
+
+Moriarty, Tuck, and Schwartz, {\it Phys Fluids A} (1991)
+
+\noindent
+von Rosenberg, {\it Methods for the Numerical Solution of Partial Differential Equations} (1969)
+
+\section{Basic equations}
+
+\begin{align}
+	\frac{\partial h}{\partial t} &= - \frac{\partial q}{\partial x} 
+	\\
+	q &= \frac{h^3}{3} \left( 1 + \beta^{-1} \frac{\partial^3 h}{\partial x^3} \right)
+	\\
+	h(x,0) &= h(x)
+	\\
+	h(0,t) &= 0
+	\\
+	q(0,t) &=0
+	\\
+	h(\infty, t) &= h_\infty
+	\\
+	\frac{\partial h}{\partial x} (\infty, t)& = 0
+\end{align}
+where $\beta$ is the Bond number.
+
+
+
+\section{Finite difference analogy}
+
+Discretize $\{ x_j \}$, $\{t_n\}$, $j = 0, 1, \dots, J$, $n = 0, 1, \dots, N$ onto a uniform grid, where $x_j = j \Delta x$ and $t_n = n \Delta t$. Define $h_{j+\frac{1}{2},n}=h(x_j,t_n)$, $q_{j,n} = q(x_j, t_n)$ ({\it i.e.} shift $h$ points down by $\frac{1}{2}$ step relative to spatial nodes). When defined in this way, the $h_{j,n}$ lie at points intermediate to the nodal points while the $q_{j,n}$ coincide with the spatial nodes. Also, $h_{0,n}$ and $h_{J+1,n}$ lie outside the spatial domain.
+
+\subsection{Boundary conditions}
+
+\begin{align}
+	\frac{h_0 + h_1}{2} &= 0
+	\\
+	q_0 &= 0
+	\\
+	\frac{h_J + h_{J+1}}{2} &= h_\infty
+	\\
+	\frac{h_{J+1} - h_{J}}{\Delta x} &=0
+\end{align}
+which gives
+\begin{align}
+	h_0 &= -h_1
+	\\
+	q_0 &= 0
+	\\
+	h_J &= h_\infty
+	\\
+	h_{J+1}&=h_\infty
+\end{align}
+Thus, $\vec{h}_n$ is a vector of size $J+2$, whose first and last two entries are $h_{0,n} = -h_{1,n}$ and $h_{J,n} = h_{J+1,n} = h_\infty$, respectively. After solution, would like to interpolate to grid points $x_j$, resulting in a vector of size $J+1$.
+
+
+
+\subsection{Centered difference analogs}
+
+Suppose we know  $(\vec{h}_n,\vec{q}_n)$ and we want to advance these values to  $(\vec{h}_{n+1},\vec{q}_{n+1})$. The difference equations centered about $x_{j-\frac{1}{2}}$, $t_{n+\frac{1}{2}}$ read
+\begin{align}
+	\frac{h_{j, {n+1}}-h_{j,n}}{\Delta t}
+	&=
+	- \frac{q_{j,n+\frac{1}{2}}-q_{j-1,n+\frac{1}{2}}}{\Delta x}
+	\\
+	q_{j,n+\frac{1}{2}}
+	&=
+	\frac{1}{3} \left(
+		\frac{h_{j,n+\frac{1}{2}}+h_{j+1,n+\frac{1}{2}}}{2}
+	\right)^3
+	\left[
+		1 + \frac{1}{\beta \Delta x} \left(
+			\frac{h_{j+2,n+\frac{1}{2}} - 2 h_{j+1,n+\frac{1}{2}}+ h_{j,n+\frac{1}{2}}}{\Delta x^2}
+	\right.
+	\right.
+	\nonumber \\ &\hphantom{=\frac{1}{3} \left(
+		\frac{h_{j,n+\frac{1}{2}}+h_{j+1,n+\frac{1}{2}}}{2}
+	\right)^3
+	\bigg[1+}
+	\left.
+	\left.
+			-
+			\frac{h_{j+1,n+\frac{1}{2}} - 2 h_{j,n+\frac{1}{2}}+ h_{j-1,n+\frac{1}{2}}}{\Delta x^2}
+		\right)
+	\right]
+	\\
+	q_{j-1,n+\frac{1}{2}}
+	&=
+	\frac{1}{3} \left(
+		\frac{h_{j-1,n+\frac{1}{2}}+h_{j,n+\frac{1}{2}}}{2}
+	\right)^3
+	\left[
+		1 + \frac{1}{\beta \Delta x} \left(
+			\frac{h_{j+1,n+\frac{1}{2}} - 2 h_{j,n+\frac{1}{2}}+ h_{j-1,n+\frac{1}{2}}}{\Delta x^2}
+	\right.
+	\right.
+	\nonumber \\ &\hphantom{=\frac{1}{3} \left(
+		\frac{h_{j,n+\frac{1}{2}}+h_{j+1,n+\frac{1}{2}}}{2}
+	\right)^3
+	\bigg[1+}
+	\left.
+	\left.
+			-
+			\frac{h_{j,n+\frac{1}{2}} - 2 h_{j-1,n+\frac{1}{2}}+ h_{j-2,n+\frac{1}{2}}}{\Delta x^2}
+		\right)
+	\right]
+\end{align}
+Rewrite as
+\begin{align}
+	h_{j, {n+1}}-h_{j,n}
+	&=
+	- \lambda (q_{j,n+\frac{1}{2}}-q_{j-1,n+\frac{1}{2}})
+	\\
+	q_{j,n+\frac{1}{2}}
+	&=
+	g(h_{j,n+\frac{1}{2}}, h_{j+1,n+\frac{1}{2}})
+	[
+		1 + \gamma (
+			h_{j+2,n+\frac{1}{2}} - 3 h_{j+1,n+\frac{1}{2}}+3 h_{j,n+\frac{1}{2}} -  h_{j-1,n+\frac{1}{2}})
+	]
+	\\
+	q_{j-1,n+\frac{1}{2}}
+	&=
+	g(h_{j-1,n+\frac{1}{2}}, h_{j,n+\frac{1}{2}})
+	[
+		1 + \gamma (
+			h_{j+1,n+\frac{1}{2}} - 3 h_{j,n+\frac{1}{2}}+ 3h_{j-1,n+\frac{1}{2}} - h_{j-2,n+\frac{1}{2}})
+	]
+\end{align}
+where
+\[
+	\lambda = \frac{\Delta t}{\Delta x}, \qquad
+	\gamma = \frac{1}{\beta \Delta x^3}, \qquad
+	g(u,v) = \frac{1}{3} \left( \frac{u + v}{2}\right)^3
+\]
+Obviously, we could substitute,
+\[
+	\vec{h}_{n+\frac{1}{2}} \approx \frac{\vec{h}_{n} + \vec{h}_{n+1}}{2} 
+\]
+but this would render the resulting equations nonlinear in the unknown $\vec{h}_{n+1}$. 
+The nonlinearity arises due to the coefficient $g$ in the expression for the fluxes. 
+
+In principle, we could just include the nonlinear terms and solve the equations by an iterative method (Newton-Raphson). However, an alternative approach that avoids the Newton-Raphson method is to apply the above substitution to all terms except the nonlinear coefficient:
+\begin{align}
+	h_{j, {n+1}}-h_{j,n}
+	&=
+	- \lambda (q_{j,n+\frac{1}{2}}-q_{j-1,n+\frac{1}{2}})
+	\\
+	q_{j,n+\frac{1}{2}}
+	&=
+	g(h_{j,n+\frac{1}{2}}, h_{j+1,n+\frac{1}{2}})
+	\bigg[
+		1 + \frac{\gamma}{2}(
+			h_{j+2,n} - 3 h_{j+1,n}+3 h_{j,n} -  h_{j-1,n}
+	\nonumber \\ &\hphantom{=\qquad\qquad\qquad\qquad \qquad}
+			+h_{j+2,n+1} - 3 h_{j+1,n+1}+3 h_{j,n+1} -  h_{j-1,n+1})
+	\bigg]
+	\\
+	q_{j-1,n+\frac{1}{2}}
+	&=
+	g(h_{j-1,n+\frac{1}{2}}, h_{j,n+\frac{1}{2}})
+	\bigg[
+		1 + \frac{\gamma}{2}(
+			h_{j+1,n} - 3 h_{j,n}+3 h_{j-1,n} -  h_{j-2,n}
+	\nonumber \\ &\hphantom{=\qquad\qquad\qquad\qquad \qquad}
+			+h_{j+1,n+1} - 3 h_{j,n+1}+3 h_{j-1,n+1} -  h_{j-2,n+1})
+	\bigg]
+\end{align}
+These are so-called ``quasi-linear equations." They may be recombined to form a pentadiagonal system for $\vec{h}_{n+1}$:
+\begin{align}
+	h_{j, {n+1}}
+	&+\frac{\lambda \gamma}{2} g_j (
+		h_{j+2,n+1} - 3 h_{j+1,n+1}+3 h_{j,n+1} -  h_{j-1,n+1}
+	)
+	\nonumber \\ 
+	&-\frac{\lambda \gamma}{2} g_{j-1} (
+		h_{j+1,n+1} - 3 h_{j,n+1}+3 h_{j-1,n+1} -  h_{j-2,n+1}
+	)
+	=
+	h_{j,n}
+	+ \lambda(g_{j-1} - g_{j})
+	\nonumber \\ 
+	&-\frac{\lambda \gamma}{2}g_j (
+		h_{j+2,n} - 3 h_{j+1,n}+3 h_{j,n} -  h_{j-1,n}
+	) 
+	+ \frac{\lambda \gamma}{2}g_{j-1}(
+		h_{j+1,n} - 3 h_{j,n}+3 h_{j-1,n} -  h_{j-2,n}
+	)
+\end{align}
+where
+\[
+	g_j \equiv g(h_{j,n+\frac{1}{2}}, h_{j+1, n+\frac{1}{2}})
+\]
+Obviously can do a bit of recombining here. Rewrite the pentadiagonal system as
+\begin{align}
+	\mu& g_{j-1} h_{j-2, n+1}
+	-  \mu (3g_{j-1} + g_{j}) h_{j-1,n+1}
+	+[1 + 3 \mu ( g_{j-1}+ g_j )]h_{j, {n+1}}
+	- \mu (g_{j-1} + 3 g_{j}) h_{j+1,n+1} 
+	\nonumber \\ &
+	+ \mu g_{j} h_{j+2,n+1} 
+	\nonumber \\ 
+	&=
+	-  \mu  g_{j-1} h_{j-2,n}
+	+ \mu (3 g_{j-1}+ g_j ) h_{j-1,n}
+	+[1 - 3 \mu (g_{j-1} + g_j)]h_{j,n}
+	+ \mu ( g_{j-1}+ 3g_j )h_{j+1,n}
+	\nonumber \\ &
+	- \mu g_j h_{j+2,n}
+	+ \lambda(g_{j-1} - g_{j})
+\end{align}
+where
+\[
+	\mu = \frac{\lambda \gamma}{2}
+\]
+Given known values of $\vec{h}_n$ and $\vec{g}$, can solve this equation using a standard algorithm for pentadiagonal systems.
+
+It remains to determine $\vec{h}_{n+\frac{1}{2}}$, which is to be inserted into the vector of nonlinear coefficients $\vec{g}$. This task may be accomplished by projecting the solution at the old time point $t_n$ to the intermediate time point $t_{n+\frac{1}{2}}$. Such a projection may be achieved via forward, backward, or centered Taylor series about the time point $t_{n+\frac{1}{2}}$ (for more details, refer to the text by von Rosenberg cited above). 
+
+We choose to adopt the centered Taylor series projection. The solution for $\vec{h}_{t+\frac{1}{2}}$ is accomplished by solving the following implicit equations:
+\begin{align}
+	\frac{h_{j, {n+\frac{1}{2}}}-h_{j,n}}{\Delta t/2}
+	&=
+	- \frac{q_{j,n+\frac{1}{4}}-q_{j-1,n+\frac{1}{4}}}{\Delta x}
+	\\
+	q_{j,n+\frac{1}{4}}
+	&=
+	\frac{1}{3} \left(
+		\frac{h_{j,n}+h_{j+1,n}}{2}
+	\right)^3
+	\left[
+		1 + \frac{1}{\beta \Delta x} \left(
+			\frac{h_{j+2,n+\frac{1}{4}} - 2 h_{j+1,n+\frac{1}{4}}+ h_{j,n+\frac{1}{4}}}{\Delta x^2}
+	\right.
+	\right.
+	\nonumber \\ &\hphantom{=\frac{1}{3} \left(
+		\frac{h_{j,n}+h_{j+1,n}}{2}
+	\right)^3
+	\bigg[1+}
+	\left.
+	\left.
+			-
+			\frac{h_{j+1,n+\frac{1}{4}} - 2 h_{j,n+\frac{1}{4}}+ h_{j-1,n+\frac{1}{4}}}{\Delta x^2}
+		\right)
+	\right]
+	\\
+	q_{j-1,n+\frac{1}{4}}
+	&=
+	\frac{1}{3} \left(
+		\frac{h_{j-1,n}+h_{j,n}}{2}
+	\right)^3
+	\left[
+		1 + \frac{1}{\beta \Delta x} \left(
+			\frac{h_{j+1,n+\frac{1}{4}} - 2 h_{j,n+\frac{1}{4}}+ h_{j-1,n+\frac{1}{4}}}{\Delta x^2}
+	\right.
+	\right.
+	\nonumber \\ &\hphantom{=\frac{1}{3} \left(
+		\frac{h_{j,n}+h_{j+1,n}}{2}
+	\right)^3
+	\bigg[1+}
+	\left.
+	\left.
+			-
+			\frac{h_{j,n+\frac{1}{4}} - 2 h_{j-1,n+\frac{1}{4}}+ h_{j-2,n+\frac{1}{4}}}{\Delta x^2}
+		\right)
+	\right]
+	\\
+	\vec{h}_{n+\frac{1}{4}}
+	&=
+	\frac{\vec{h}_{n} + \vec{h}_{n+\frac{1}{2}}}{2}
+\end{align}
+Note that the previous solution $\vec{h}_n$ is used for the nonlinear coefficients (quasi-linearization)! This scheme can be thought of as taking a half-step towards the desired time point and relying on the assumption that $\vec{h}_n$ does not vary much in the intermediate region between $t_{n}$ and $t_{n+\frac{1}{2}}$. By a similar procedure as before, this equation may be re-expressed as a pentadiagonal system for $\vec{h}_{n+\frac{1}{2}}$:
+\begin{align}
+	\frac{\mu}{2}& g_{j-1} h_{j-2, n+\frac{1}{2}}
+	-  \frac{\mu}{2} (3g_{j-1} + g_{j}) h_{j-1,n+\frac{1}{2}}
+	+\left[1 +  \frac{3\mu}{2} ( g_{j-1}+ g_j )\right]h_{j, {n+\frac{1}{2}}}
+	- \frac{\mu}{2} (g_{j-1} + 3 g_{j}) h_{j+1,n+\frac{1}{2}} 
+	\nonumber \\ &
+	+ \frac{\mu}{2} g_{j} h_{j+2,n+\frac{1}{2}} 
+	\nonumber \\ 
+	&=
+	-  \frac{\mu}{2}  g_{j-1} h_{j-2,n}
+	+ \frac{\mu}{2} (3 g_{j-1}+ g_j ) h_{j-1,n}
+	+\left[1 - \frac{3\mu}{2} (g_{j-1} + g_j) \right]h_{j,n}
+	+ \frac{\mu}{2} ( g_{j-1}+ 3g_j )h_{j+1,n}
+	\nonumber \\ &
+	- \frac{\mu}{2} g_j h_{j+2,n}
+	- \lambda(g_j - g_{j-1})
+\end{align}
+where
+\[
+	g_{j} = g(h_{j,n},h_{j+1,n})
+\]
+In principle, we could improve this scheme by iteratively solving the pentadiagonal system and updating the nonlinear coefficient with each iteration. However, in practice, this procedure is found to be unnecessary  (see von Rosenberg 1969).
+
+
+
+
+
+
+
+\subsection{Difference analogs near the boundaries}
+
+The equations above apply for $3 \le j \le J-3$. The equations corresponding to $j = 1, 2, J-2,$ and $J-1$ require special attention due to the influence of the boundary conditions. Note that no equations are required for $j=0$ and $J$, since the boundary values are already determined. We need only solve for the $J-1$ interior values of $\vec{h}_{n+1}$
+
+\subsubsection{$j=1$}
+
+Since $q_{0, n} = 0$, can simply set $g_{j-1} = 0$ in the above equations. This results in the vanishing of the coefficient multiplying $h_{j-2,n}$. Furthermore, since $h_{0,n} = -h_{1,n}$, can group the next two terms together. The resulting pentadiagonal system for $j = 1$ is
+\begin{align}
+	(1 &+ 4 \mu g_j )h_{j, {n+1}}
+	- 3\mu  g_{j} h_{j+1,n+1} 
+	+ \mu g_{j} h_{j+2,n+1} 
+	\nonumber \\ 
+	&=
+	(1 - 4 \mu g_j)h_{j,n}
+	+ 3\mu g_j h_{j+1,n}
+	- \mu g_j h_{j+2,n}
+	- \lambda g_j 
+\end{align}
+
+
+\subsubsection{$j=2$}
+
+Here, the only change is that $h_{0,n} = -h_{1,n}$. Thus, the $h_{j-2,n}$ term is eliminated and its coefficient is subsumed into $h_{j-1,n}$. The resulting system for $j = 2$ is
+\begin{align}
+	-  \mu& (4g_{j-1} + g_{j}) h_{j-1,n+1}
+	+[1 + 3 \mu ( g_{j-1}+ g_j )]h_{j, {n+1}}
+	- \mu (g_{j-1} + 3 g_{j}) h_{j+1,n+1} 
+	+ \mu g_{j} h_{j+2,n+1} 
+	\nonumber \\ 
+	&=
+	\mu (4 g_{j-1}+ g_j ) h_{j-1,n}
+	+[1 - 3 \mu (g_{j-1} + g_j)]h_{j,n}
+	+ \mu ( g_{j-1}+ 3g_j )h_{j+1,n}
+	- \mu g_j h_{j+2,n}
+	\nonumber \\ &
+	+ \lambda(g_{j-1} - g_{j})
+\end{align}
+
+
+\subsubsection{$j=J-2$}
+
+Here, the change is $h_{J} = h_\infty$. This affects the $h_{j+2,n}$ term in the pentadiagonal equation:
+\begin{align}
+	\mu& g_{j-1} h_{j-2, n+1}
+	-  \mu (3g_{j-1} + g_{j}) h_{j-1,n+1}
+	+[1 + 3 \mu ( g_{j-1}+ g_j )]h_{j, {n+1}}
+	- \mu (g_{j-1} + 3 g_{j}) h_{j+1,n+1} 
+	\nonumber \\ 
+	&=
+	-  \mu  g_{j-1} h_{j-2,n}
+	+ \mu (3 g_{j-1}+ g_j ) h_{j-1,n}
+	+[1 - 3 \mu (g_{j-1} + g_j)]h_{j,n}
+	+ \mu ( g_{j-1}+ 3g_j )h_{j+1,n}
+	\nonumber \\ &
+	+ \lambda(g_{j-1} - g_{j})
+	- 2\mu g_{j} h_\infty
+\end{align}
+
+
+\subsubsection{$j=J-1$}
+
+Now $h_{J,n} = h_{J+1,n} = h_\infty$. We obtain 
+\begin{align}
+	\mu& g_{j-1} h_{j-2, n+1}
+	-  \mu (3g_{j-1} + g_{j}) h_{j-1,n+1}
+	+[1 + 3 \mu ( g_{j-1}+ g_j )]h_{j, {n+1}}
+	\nonumber \\ 
+	&=
+	-  \mu  g_{j-1} h_{j-2,n}
+	+ \mu (3 g_{j-1}+ g_j ) h_{j-1,n}
+	+[1 - 3 \mu (g_{j-1} + g_j)]h_{j,n}
+	\nonumber \\ &
+	+ 2\mu ( g_{j-1}+ 2g_j ) h_\infty
+	+ \lambda(g_{j-1} - g_{j})
+\end{align}
+%
+Similar equations may be written for the projection step to solve for $\vec{h}_{n+\frac{1}{2}}$.
+
+
+
+
+\section{Algorithm}
+
+The above procedure can be thought of as a two-step, predictor-corrector scheme. The algorithm procedes as follows:
+\begin{enumerate}
+	\item (Prediction) Given $\Delta t$, $\Delta x$, $\vec{p} = (\beta, h_\infty)$, and $\vec{h}_n$. Let $\Delta t^* = \Delta t/2$ and $\vec{v} = \vec{h}_n$. Compute
+	\[
+		\lambda = \frac{\Delta t^*}{\Delta x}, \qquad
+		\mu = \frac{\lambda}{2\beta \Delta x^3}, \qquad
+		g_j = 
+		\frac{1}{3} \left(\frac{v_{j} +v_{j+1}}{2}\right)^3, 
+		\quad 1 \le j \le J-1
+	\]
+	Let $\vec{u}$ denote the vector of unknowns. Solve the following pentadiagonal system using standard methods (see  von Rosenberg 1969, Appendix II):
+	\[
+	a_j u_{j-2}
+	+
+	b_j u_{j-1}
+	+
+	c_j u_{j}
+	+
+	d_j u_{j+1}
+	+
+	e_j u_{j+2}
+	=
+	f_j
+	\] 
+	where the coefficients are given below. Finally, set $\vec{h}_{n+\frac{1}{2}} = \vec{u}$
+	\item (Correction) Now set $\Delta t^* = \Delta t$, $\vec{v} = \vec{h}_{n+\frac{1}{2}}$ and repeat step 1, and then set $\vec{h}_{n+1} = \vec{u}$.
+\end{enumerate}
+
+
+
+\subsection{Coefficients for the pentadiagonal system}
+\begin{align}
+	a_j &=b_j =  0
+	\\
+	c_j &= 1 +  4\mu  g_j
+	\\
+	d_j &=- 3\mu  g_{j}
+	\\
+	e_j &=\mu  g_{j}
+	\\
+	f_j &=
+	(1 - 4 \mu g_j) h_{j,n}
+	+ 3\mu g_jh_{j+1,n}
+	- \mu g_j h_{j+2,n}
+	- \lambda  g_{j},
+	\\ \nonumber
+	&\text{for } j= 1
+\end{align}
+\begin{align}
+	a_j &= 0
+	\\
+	b_j &= -  \mu  (4g_{j-1} + g_{j}) 
+	\\
+	c_j &= 1 +  3\mu  ( g_{j-1}+ g_j )
+	\\
+	d_j &=- \mu  (g_{j-1} + 3 g_{j})
+	\\
+	e_j &=\mu  g_{j}
+	\\
+	f_j &=
+	\mu (4 g_{j-1}+ g_j ) h_{j-1,n}
+	+\left[1 - 3 \mu (g_{j-1} + g_j) \right]h_{j,n}
+	\nonumber \\ &\qquad
+	+ \mu ( g_{j-1}+ 3g_j )h_{j+1,n}
+	- \mu g_j h_{j+2,n}
+	+ \lambda(g_{j-1} - g_{j}),
+	\\ \nonumber
+	&\text{for } j=2
+\end{align}
+\begin{align}
+	a_j &= \mu g_{j-1}
+	\\
+	b_j &= -  \mu  (3g_{j-1} + g_{j}) 
+	\\
+	c_j &= 1 +  3\mu  ( g_{j-1}+ g_j )
+	\\
+	d_j &=- \mu  (g_{j-1} + 3 g_{j})
+	\\
+	e_j &=\mu  g_{j}
+	\\
+	f_j &=-  \mu  g_{j-1} h_{j-2,n}
+	+ \mu (3 g_{j-1}+ g_j ) h_{j-1,n}
+	+\left[1 - 3 \mu (g_{j-1} + g_j) \right]h_{j,n}
+	\nonumber \\ &\qquad
+	+ \mu ( g_{j-1}+ 3g_j )h_{j+1,n}
+	- \mu g_j h_{j+2,n}
+	+ \lambda(g_{j-1} - g_{j}),
+	\\ \nonumber
+	&\text{for } 3 \le j \le J-3
+\end{align}
+\begin{align}
+	a_j &= \mu g_{j-1}
+	\\
+	b_j &= -  \mu  (3g_{j-1} + g_{j}) 
+	\\
+	c_j &= 1 +  3\mu  ( g_{j-1}+ g_j )
+	\\
+	d_j &=- \mu  (g_{j-1} + 3 g_{j})
+	\\
+	e_j &=0
+	\\
+	f_j &=-  \mu  g_{j-1} h_{j-2,n}
+	+ \mu (3 g_{j-1}+ g_j ) h_{j-1,n}
+	+\left[1 - 3 \mu (g_{j-1} + g_j) \right]h_{j,n}
+	\nonumber \\ &\qquad
+	+ \mu ( g_{j-1}+ 3g_j )h_{j+1,n}
+	- 2\mu g_j h_\infty
+	+ \lambda(g_{j-1} - g_{j}),
+	\\ \nonumber
+	&\text{for } j = J-2
+\end{align}
+\begin{align}
+	a_j &= \mu g_{j-1}
+	\\
+	b_j &= -  \mu  (3g_{j-1} + g_{j}) 
+	\\
+	c_j &= 1 +  3\mu  ( g_{j-1}+ g_j )
+	\\
+	d_j &= e_j = 0 
+	\\
+	f_j &=-  \mu  g_{j-1} h_{j-2,n}
+	+ \mu (3 g_{j-1}+ g_j ) h_{j-1,n}
+	+\left[1 - 3 \mu (g_{j-1} + g_j) \right]h_{j,n}
+	\nonumber \\ &\qquad
+	+ 2\mu ( g_{j-1}+ 2g_j )h_\infty
+	+ \lambda(g_{j-1} - g_{j}),
+	\\ \nonumber
+	&\text{for } j = J-1
+\end{align}
+
+
+
+
+
+\end{document}

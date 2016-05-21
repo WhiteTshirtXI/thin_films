@@ -1,0 +1,12 @@
+\BOOKMARK [1][-]{section.1}{References}{}
+\BOOKMARK [1][-]{section.2}{Basic equations}{}
+\BOOKMARK [1][-]{section.3}{Finite difference analogy}{}
+\BOOKMARK [2][-]{subsection.3.1}{Boundary conditions}{section.3}
+\BOOKMARK [2][-]{subsection.3.2}{Centered difference analogs}{section.3}
+\BOOKMARK [2][-]{subsection.3.3}{Difference analogs near the boundaries}{section.3}
+\BOOKMARK [3][-]{subsubsection.3.3.1}{j=1}{subsection.3.3}
+\BOOKMARK [3][-]{subsubsection.3.3.2}{j=2}{subsection.3.3}
+\BOOKMARK [3][-]{subsubsection.3.3.3}{j=J-2}{subsection.3.3}
+\BOOKMARK [3][-]{subsubsection.3.3.4}{j=J-1}{subsection.3.3}
+\BOOKMARK [1][-]{section.4}{Algorithm}{}
+\BOOKMARK [2][-]{subsection.4.1}{Coefficients for the pentadiagonal system}{section.4}
